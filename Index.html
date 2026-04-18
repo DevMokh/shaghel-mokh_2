@@ -1,28 +1,27 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#0d0d0d">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="شغل مخك">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="application-name" content="شغل مخك">
-<meta name="msapplication-TileColor" content="#0d0d0d">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="https://i.postimg.cc/qqTBP312/1000061201.png">
-<title>شغل مخك - الإصدار الألترا 4.0</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0d0d0d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="شغل مخك">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="شغل مخك">
+  <meta name="msapplication-TileColor" content="#0d0d0d">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="https://i.postimg.cc/qqTBP312/1000061201.png">
+  <title>شغل مخك - الإصدار الألترا 4.0</title>
 
-<!-- الخطوط -->
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-<!-- Font Awesome -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<!-- Confetti -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js"></script>
-
-<!-- الأنماط المخصصة -->
-<link rel="stylesheet" href="styles.css">
+  <!-- الخطوط -->
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Confetti -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js"></script>
+  <!-- الأنماط المخصصة -->
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body id="main-body">
 
@@ -359,7 +358,6 @@
     <button onclick="window.toggleSettings()"><i class="fas fa-cog"></i> الإعدادات <i class="fas fa-chevron-left"></i></button>
   </div>
   <div id="settings-panel" class="sidebar-settings">
-    <!-- سيتم ملؤها ديناميكياً أو تظل ثابتة -->
     <button onclick="window.changeUsername()">✏️ تغيير الاسم</button>
     <div class="toggle-row"><span>🌙 الوضع الليلي</span><div class="toggle" id="theme-toggle" onclick="window.toggleTheme()"></div></div>
     <div class="toggle-row"><span>🔊 الأصوات</span><div class="toggle" id="sound-toggle-sb" onclick="window.toggleSound()"></div></div>
@@ -374,22 +372,136 @@
 <!-- توست -->
 <div id="toast-container"></div>
 
-<!-- حوارات التأكيد والإدخال (كما هي) -->
-<div id="cmod-confirm" class="cmod-overlay">...</div>
-<div id="cmod-input" class="cmod-overlay">...</div>
-<div id="cmod-exit" class="cmod-overlay">...</div>
+<!-- حوارات التأكيد والإدخال -->
+<div id="cmod-confirm" class="cmod-overlay" onclick="window._cancelConfirm()">
+  <div class="cmod-box" onclick="event.stopPropagation()">
+    <div class="cmod-icon" id="cmod-ico">⚠️</div>
+    <div class="cmod-title" id="cmod-ttl">هل أنت متأكد؟</div>
+    <div class="cmod-msg" id="cmod-msg"></div>
+    <div class="cmod-btns">
+      <button class="cmod-btn cancel" onclick="window._cancelConfirm()">إلغاء</button>
+      <button class="cmod-btn danger" id="cmod-yes">تأكيد</button>
+    </div>
+  </div>
+</div>
+<div id="cmod-input" class="cmod-overlay" onclick="window._cancelInput()">
+  <div class="cmod-box" onclick="event.stopPropagation()">
+    <div class="cmod-icon">✏️</div>
+    <div class="cmod-title">تغيير الاسم</div>
+    <div class="cmod-msg">اكتب اسمك الجديد</div>
+    <div class="cmod-inp-wrap">
+      <input id="cmod-inp-field" class="cmod-inp" type="text" maxlength="15" placeholder="اسمك..." oninput="document.getElementById('cmod-inp-hint').innerText=this.value.length+' / 15 حرف'" onkeydown="if(event.key==='Enter') window._confirmInput()">
+      <div class="cmod-hint" id="cmod-inp-hint">0 / 15 حرف</div>
+    </div>
+    <div class="cmod-btns">
+      <button class="cmod-btn cancel" onclick="window._cancelInput()">إلغاء</button>
+      <button class="cmod-btn ok" onclick="window._confirmInput()">حفظ</button>
+    </div>
+  </div>
+</div>
+<div id="cmod-exit" class="cmod-overlay" onclick="window._cancelExit()">
+  <div class="cmod-box" onclick="event.stopPropagation()">
+    <div class="cmod-icon">🚪</div>
+    <div class="cmod-title">الخروج من الجولة؟</div>
+    <div class="cmod-msg">سيُفقد تقدمك في هذه الجولة</div>
+    <div class="cmod-btns">
+      <button class="cmod-btn cancel" onclick="window._cancelExit()">استمر 💪</button>
+      <button class="cmod-btn danger" onclick="window._confirmExit()">خروج</button>
+    </div>
+  </div>
+</div>
 
-<!-- مودالات أخرى -->
-<div id="modal-friends" class="modal">...</div>
-<div id="modal-hint" class="modal">...</div>
-<div id="modal-tasks" class="modal">...</div>
-<div id="modal-achv" class="modal">...</div>
-<div id="modal-card" class="modal">...</div>
-<div id="modal-create-room" class="modal">...</div>
-<div id="modal-join-room" class="modal">...</div>
+<!-- مودالات -->
+<div id="modal-friends" class="modal" onclick="window.closeModal('friends')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="handle"></div>
+    <div class="head"><span>👥 الأصدقاء</span><button onclick="window.closeModal('friends')">✕</button></div>
+    <div class="body">
+      <div style="text-align:center; padding:16px; background:rgba(251,191,36,0.05); border-radius:20px;">
+        <div>كود صديقك الخاص</div>
+        <div id="my-friend-code" style="font-size:28px; font-weight:900; color:var(--accent); letter-spacing:0.2em;">------</div>
+        <button onclick="window.copyFriendCode()" class="primary-btn small">📋 انسخ الكود</button>
+      </div>
+      <div style="margin-top:16px;">
+        <label>أضف صديق بالكود</label>
+        <div style="display:flex; gap:8px;">
+          <input id="friend-code-input" placeholder="XXXXXX" style="flex:1;">
+          <button id="btn-add-friend" onclick="window.addFriendByCode()" class="primary-btn">إضافة</button>
+        </div>
+      </div>
+      <div id="friends-list"></div>
+    </div>
+  </div>
+</div>
 
-<!-- PWA Banner & Service Worker Code (كما هو) -->
+<div id="modal-hint" class="modal" onclick="window.closeModal('hint')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="head"><span>💡 تلميح</span><button onclick="window.closeModal('hint')">✕</button></div>
+    <div class="body"><p id="hint-text"></p></div>
+  </div>
+</div>
+
+<div id="modal-tasks" class="modal" onclick="window.closeModal('tasks')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="head"><span>📅 مهام اليوم</span><button onclick="window.closeModal('tasks')">✕</button></div>
+    <div class="body" id="tasks-body"></div>
+  </div>
+</div>
+
+<div id="modal-achv" class="modal" onclick="window.closeModal('achv')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="head"><span>🏅 الإنجازات</span><button onclick="window.closeModal('achv')">✕</button></div>
+    <div class="body" id="achv-body"></div>
+  </div>
+</div>
+
+<div id="modal-card" class="modal" onclick="window.closeModal('card')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="head"><span>🪪 بطاقتي</span><button onclick="window.closeModal('card')">✕</button></div>
+    <div class="body"><div id="player-card-content"></div></div>
+  </div>
+</div>
+
+<div id="modal-create-room" class="modal" onclick="window.closeModal('create-room')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="head"><span>🎮 إنشاء غرفة</span><button onclick="window.closeModal('create-room')">✕</button></div>
+    <div class="body">
+      <div class="form-group"><label>اسم الغرفة</label><input id="room-name-input" placeholder="غرفة التحدي 🎮"></div>
+      <div class="form-group"><label>التصنيف</label><select id="room-cat-select"></select></div>
+      <button onclick="window.confirmCreateRoom()" class="primary-btn">إنشاء الغرفة 🚀</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-join-room" class="modal" onclick="window.closeModal('join-room')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="head"><span>🔑 انضمام بكود</span><button onclick="window.closeModal('join-room')">✕</button></div>
+    <div class="body">
+      <div class="form-group"><label>كود الغرفة</label><input id="join-code-input" placeholder="ABC123"></div>
+      <button onclick="window.joinRoomByCode()" class="primary-btn">انضمام 🎮</button>
+    </div>
+  </div>
+</div>
+
+<!-- PWA Banner & Service Worker Code -->
+<div id="offline-banner">...</div>
+<div id="install-prompt">...</div>
+<div id="update-banner">...</div>
 
 <script type="module" src="js/main.js"></script>
+<script>
+// PWA Code (كما هو في النسخ السابقة)
+let deferredInstallPrompt = null;
+let swRegistration = null;
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js', { scope: './' }).then(reg => {
+      swRegistration = reg;
+      console.log('[PWA] SW registered');
+    });
+  });
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstallPrompt = e; });
+</script>
 </body>
 </html>
