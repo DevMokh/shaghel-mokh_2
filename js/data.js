@@ -2,9 +2,6 @@
 import { getCurrentSeason } from './firebase.js';
 import { showToast, playSound } from './helpers.js';
 
-// ══════════════════════════════════════════════════════════════════
-// تصنيفات اللعبة الكاملة (كما في الأصل)
-// ══════════════════════════════════════════════════════════════════
 export const categoryConfig = {
   islamic: { name: "إسلاميات", icon: "🕌", subs: ["قصص الأنبياء", "القرآن الكريم", "السيرة النبوية", "الفقه الميسر"], order: 0 },
   egypt:   { name: "تاريخ مصر", icon: "🏺", subs: ["الفراعنة", "مصر الحديثة", "آثار النوبة", "ثورات مصر"], order: 1 },
@@ -38,9 +35,6 @@ export const ACCENT_COLORS = [
   { name: 'برتقالي', val: '#fb923c', val2: '#f97316' },
 ];
 
-// ══════════════════════════════════════════════════════════════════
-// البيانات الافتراضية للاعب (تُستخدم عند إنشاء ملف جديد)
-// ══════════════════════════════════════════════════════════════════
 export function getDefaultData() {
   const season = getCurrentSeason();
   return {
@@ -106,7 +100,7 @@ export function getDefaultData() {
       { id: "rich_5k",   text: "جمع 5000 عملة",             earned: false, icon: "💎" },
       { id: "lvl_20",    text: "الوصول للمستوى 20",         earned: false, icon: "🌟" },
       { id: "master_200",text: "200 إجابة صحيحة",           earned: false, icon: "🏅" },
-      { id: "all_cats",  text: "لعب في كل التصنيفات الـ 8", earned: false, icon: "🌍" },
+      { id: "all_cats",  text: "لعب في كل التصنيفات", earned: false, icon: "🌍" },
       { id: "weekly_win",text: "فاز بتحدي أسبوعي",          earned: false, icon: "🏆" },
       { id: "friend_3",  text: "أضف 3 أصدقاء",              earned: false, icon: "🤝" },
       { id: "host_5",    text: "استضف 5 غرف لعب",           earned: false, icon: "🏰" },
@@ -129,22 +123,11 @@ export function getDefaultData() {
   };
 }
 
-// ══════════════════════════════════════════════════════════════════
-// حفظ البيانات في Firestore و localStorage
-// ══════════════════════════════════════════════════════════════════
 export async function saveData() {
   if (!window.gameData) return;
-  try {
-    localStorage.setItem('shaghel_gamedata_backup', JSON.stringify(window.gameData));
-  } catch (e) {}
-
-  if (!navigator.onLine) {
-    window.queueOfflineSave?.(window.gameData);
-    return;
-  }
-
+  try { localStorage.setItem('shaghel_gamedata_backup', JSON.stringify(window.gameData)); } catch (e) {}
+  if (!navigator.onLine) { window.queueOfflineSave?.(window.gameData); return; }
   if (!window.currentUser || !window.db || !window.firebaseReady) return;
-
   const uid = window.currentUser.uid;
   const d = window.gameData;
   try {
@@ -157,129 +140,116 @@ export async function saveData() {
       updatedAt: Date.now(),
       [`season_${season}`]: d.xp
     }, true);
-  } catch (e) {
-    console.error("Save error:", e);
-    window.queueOfflineSave?.(d);
-  }
+  } catch (e) { console.error("Save error:", e); window.queueOfflineSave?.(d); }
 }
 window.saveData = saveData;
 
-// ══════════════════════════════════════════════════════════════════
-// تحديث المهام اليومية
-// ══════════════════════════════════════════════════════════════════
 export function updateDailyTask(id, amt) {
   const d = window.gameData;
   const task = d.dailyTasks.find(t => t.id === id);
   if (task && !task.claimed) {
     task.current = Math.min(task.current + amt, task.goal);
-    if (task.current >= task.goal) {
-      d.coins += task.reward;
-      task.claimed = true;
-      showToast(`🎁 مهمة منجزة! +${task.reward} عملة`);
-    }
+    if (task.current >= task.goal) { d.coins += task.reward; task.claimed = true; showToast(`🎁 مهمة منجزة! +${task.reward} عملة`); }
   }
 }
 window.updateDailyTask = updateDailyTask;
 
-// ══════════════════════════════════════════════════════════════════
-// تحديث المهام الأسبوعية
-// ══════════════════════════════════════════════════════════════════
 export function updateWeeklyTask(id, amt) {
-  const d = window.gameData;
-  const weekId = getCurrentSeason(); // نستخدم الموسم كمعرف أسبوعي للتبسيط
-  const task = d.weeklyTasks.find(t => t.id === id);
-  if (task && !task.claimed) {
-    if (task.weekId !== weekId) {
-      task.weekId = weekId;
-      task.current = 0;
-      task.claimed = false;
-    }
-    task.current = Math.min(task.current + amt, task.goal);
-    if (task.current >= task.goal) {
-      showToast(`📋 مهمة أسبوعية جاهزة! +${task.reward} عملة`);
-    }
+  if (amt <= 0) return;
+  const d = window.gameData; if (!d) return;
+  const weekId = window.getWeekId?.() || getCurrentSeason();
+  if (!d.weeklyTasks || !d.weeklyTasks.length) {
+    d.weeklyTasks = [
+      { id: "w_games_5", text: "العب 5 جولات هذا الأسبوع", goal: 5, current: 0, reward: 500, claimed: false, weekId: "" },
+      { id: "w_daily_3", text: "أكمل 3 تحديات يومية", goal: 3, current: 0, reward: 700, claimed: false, weekId: "" },
+      { id: "w_correct_30", text: "أجب 30 سؤالاً صحيحاً", goal: 30, current: 0, reward: 800, claimed: false, weekId: "" },
+      { id: "w_streak_10", text: "حقق سلسلة 10 في جولة", goal: 10, current: 0, reward: 1000, claimed: false, weekId: "" },
+    ];
   }
+  const task = d.weeklyTasks.find(t => t.id === id);
+  if (!task || task.claimed) return;
+  if (task.weekId !== weekId) { task.weekId = weekId; task.current = 0; task.claimed = false; }
+  task.current = Math.min(task.current + amt, task.goal);
+  if (task.current >= task.goal && !task.claimed) showToast(`📋 مهمة أسبوعية جاهزة! +${task.reward} عملة`);
 }
 window.updateWeeklyTask = updateWeeklyTask;
 
-// ══════════════════════════════════════════════════════════════════
-// إضافة XP موسمي
-// ══════════════════════════════════════════════════════════════════
 export function addSeasonXP(amt) {
   const d = window.gameData;
   const season = getCurrentSeason();
   if (!d.seasonData) d.seasonData = { seasonId: season, xp: 0, rank: 'برونز', gamesPlayed: 0, challengesDone: 0, weeklyDone: 0, rewardClaimed: false };
-  if (d.seasonData.seasonId !== season) {
-    d.seasonData = { seasonId: season, xp: 0, rank: 'برونز', gamesPlayed: 0, challengesDone: 0, weeklyDone: 0, rewardClaimed: false };
-  }
+  if (d.seasonData.seasonId !== season) d.seasonData = { seasonId: season, xp: 0, rank: 'برونز', gamesPlayed: 0, challengesDone: 0, weeklyDone: 0, rewardClaimed: false };
   d.seasonData.xp += amt;
 }
 window.addSeasonXP = addSeasonXP;
 
-// ══════════════════════════════════════════════════════════════════
-// فحص المستوى وتحديث الرتبة
-// ══════════════════════════════════════════════════════════════════
 export function checkLevel() {
-  const d = window.gameData;
-  while (d.xp >= d.level * 1500) {
-    d.level++;
-    d.coins += 500;
-    playSound('snd-level');
-    try { confetti({ particleCount: 200, spread: 120, origin: { y: .6 } }); } catch (e) {}
-    if      (d.level >= 50) d.rank = '🌟 أسطورة الأساطير';
-    else if (d.level >= 30) d.rank = '👑 إمبراطور المعرفة';
-    else if (d.level >= 20) d.rank = '💎 أسطورة المعرفة';
-    else if (d.level >= 15) d.rank = '🔮 مفكر عالمي';
-    else if (d.level >= 10) d.rank = '🎓 باحث متفوق';
-    else if (d.level >= 5)  d.rank = '📚 قارئ نهم';
-    else                    d.rank = '🔍 باحث عن المعرفة';
+  const d = window.gameData; if (!d) return;
+  while (d.xp >= (d.level || 1) * 1500) {
+    d.level++; d.coins += 500; playSound("snd-level");
+    try { confetti({ particleCount: 200, spread: 120, origin: { y: 0.6 } }); } catch (e) {}
+    if (d.level >= 50) d.rank = "🌟 أسطورة الأساطير";
+    else if (d.level >= 30) d.rank = "👑 إمبراطور المعرفة";
+    else if (d.level >= 20) d.rank = "💎 أسطورة المعرفة";
+    else if (d.level >= 15) d.rank = "🔮 مفكر عالمي";
+    else if (d.level >= 10) d.rank = "🎓 باحث متفوق";
+    else if (d.level >= 5)  d.rank = "📚 قارئ نهم";
+    else d.rank = "🔍 باحث عن المعرفة";
     showToast(`🎉 المستوى ${d.level}! +500 عملة`);
+    if (d.level % 5 === 0) { const bonus = d.level * 100; d.coins += bonus; setTimeout(() => showToast(`🎁 مكافأة المستوى ${d.level}: +${bonus} عملة!`, 4000), 300); }
   }
+  const unlk = (id, msg) => { const a = d.achievements?.find(x => x.id === id); if (a && !a.earned) { a.earned = true; setTimeout(() => showToast(msg), 600); } };
+  if (d.level >= 5)  unlk("lvl_5", "🏆 إنجاز: المستوى 5!");
+  if (d.level >= 10) unlk("lvl_10", "👑 إنجاز: المستوى 10!");
+  if (d.level >= 20) unlk("lvl_20", "🌟 إنجاز: المستوى 20!");
+  if (d.stats?.maxStreak >= 5)   unlk("streak_5", "⚡ إنجاز: سلسلة 5!");
+  if (d.stats?.maxStreak >= 10)  unlk("streak_10", "🔥 إنجاز: سلسلة 10!");
+  if (d.coins >= 2000) unlk("rich", "💰 إنجاز: 2000 عملة!");
+  if (d.coins >= 5000) unlk("rich_5k", "💎 إنجاز: 5000 عملة!");
+  if (d.stats?.gamesPlayed >= 10) unlk("veteran", "🎖️ إنجاز: 10 جولات!");
+  if (d.stats?.correctAnswers >= 50)  unlk("master_50", "🧠 إنجاز: 50 إجابة!");
+  if (d.stats?.correctAnswers >= 200) unlk("master_200", "🏅 إنجاز: 200 إجابة صحيحة!");
+  if (d.stats?.completedSections >= 5) unlk("explorer", "🗺️ إنجاز: 5 أقسام!");
+  if (d.stats?.dailyChallengesWon >= 3) unlk("daily_3", "📅 إنجاز: 3 تحديات يومية!");
+  if (d.stats?.dailyChallengesWon >= 7) unlk("daily_7", "🔥 إنجاز: 7 تحديات يومية!");
+  if (d.detailedStats?.speedAnswers >= 5) unlk("speed_5", "⚡ إنجاز: 5 إجابات سريعة!");
+  if (d.detailedStats?.noHintGames >= 1)  unlk("no_hint", "🎯 إنجاز: جولة بدون مساعدات!");
+  if ((d.friends?.length || 0) >= 3) unlk("friend_3", "🤝 إنجاز: 3 أصدقاء!");
+  const played = d.detailedStats?.categoriesPlayed || [];
+  const allCats = Object.values(categoryConfig).map(c => c.name);
+  if (allCats.length > 0 && allCats.every(c => played.includes(c))) unlk("all_cats", "🌍 إنجاز: لعبت في كل التصنيفات!");
 }
 window.checkLevel = checkLevel;
 
-// ══════════════════════════════════════════════════════════════════
-// تحديث سلسلة الدخول اليومي
-// ══════════════════════════════════════════════════════════════════
 export function updateLoginStreak() {
   const d = window.gameData;
   if (!d.loginStreak) d.loginStreak = { count: 0, lastDate: '', maxCount: 0 };
   const today = new Date().toDateString();
   const ls = d.loginStreak;
   const yesterday = new Date(Date.now() - 86400000).toDateString();
-
   if (ls.lastDate === today) return;
-
   if (ls.lastDate === yesterday) {
-    ls.count++;
-    ls.lastDate = today;
-    if (ls.count > ls.maxCount) ls.maxCount = ls.count;
+    ls.count++; ls.lastDate = today; if (ls.count > ls.maxCount) ls.maxCount = ls.count;
     const dayInCycle = ((ls.count - 1) % 7) + 1;
     const rewards = [0, 50, 100, 150, 200, 300, 400, 700];
     const reward = rewards[dayInCycle] || 50;
-    d.coins += reward;
-    addSeasonXP(20 * dayInCycle);
+    d.coins += reward; addSeasonXP(20 * dayInCycle);
     showToast(`🔥 يوم ${ls.count}! +${reward} عملة`, 3500);
   } else {
     if (ls.count >= 3) showToast(`😢 انكسرت سلسلتك (${ls.count} يوم)`, 3000);
-    ls.count = 1;
-    ls.lastDate = today;
-    d.coins += 50;
+    ls.count = 1; ls.lastDate = today; d.coins += 50;
     showToast(`🎁 يوم جديد! +50 عملة`, 3500);
   }
 }
 window.updateLoginStreak = updateLoginStreak;
 
-// ══════════════════════════════════════════════════════════════════
-// دوال مساعدة للبيانات (تستخدم في UI)
-// ══════════════════════════════════════════════════════════════════
 export function getSeasonRank(xp) {
   const ranks = [
-    { name: 'برونز',    minXP: 0,    color: '#cd7f32', emoji: '🥉', reward: 500 },
-    { name: 'فضي',      minXP: 500,  color: '#c0c0c0', emoji: '🥈', reward: 1000 },
-    { name: 'ذهبي',     minXP: 1500, color: '#ffd700', emoji: '🥇', reward: 2000 },
-    { name: 'بلاتيني',  minXP: 3000, color: '#e5e4e2', emoji: '💎', reward: 3500 },
-    { name: 'ألماسي',   minXP: 6000, color: '#b9f2ff', emoji: '👑', reward: 5000 },
+    { name: 'برونز', minXP: 0, color: '#cd7f32', emoji: '🥉', reward: 500 },
+    { name: 'فضي', minXP: 500, color: '#c0c0c0', emoji: '🥈', reward: 1000 },
+    { name: 'ذهبي', minXP: 1500, color: '#ffd700', emoji: '🥇', reward: 2000 },
+    { name: 'بلاتيني', minXP: 3000, color: '#e5e4e2', emoji: '💎', reward: 3500 },
+    { name: 'ألماسي', minXP: 6000, color: '#b9f2ff', emoji: '👑', reward: 5000 },
   ];
   let rank = ranks[0];
   for (const r of ranks) if (xp >= r.minXP) rank = r;
@@ -288,11 +258,11 @@ export function getSeasonRank(xp) {
 
 export function getSeasonProgress(xp) {
   const ranks = [
-    { name: 'برونز',    minXP: 0,    color: '#cd7f32', emoji: '🥉' },
-    { name: 'فضي',      minXP: 500,  color: '#c0c0c0', emoji: '🥈' },
-    { name: 'ذهبي',     minXP: 1500, color: '#ffd700', emoji: '🥇' },
-    { name: 'بلاتيني',  minXP: 3000, color: '#e5e4e2', emoji: '💎' },
-    { name: 'ألماسي',   minXP: 6000, color: '#b9f2ff', emoji: '👑' },
+    { name: 'برونز', minXP: 0, color: '#cd7f32', emoji: '🥉' },
+    { name: 'فضي', minXP: 500, color: '#c0c0c0', emoji: '🥈' },
+    { name: 'ذهبي', minXP: 1500, color: '#ffd700', emoji: '🥇' },
+    { name: 'بلاتيني', minXP: 3000, color: '#e5e4e2', emoji: '💎' },
+    { name: 'ألماسي', minXP: 6000, color: '#b9f2ff', emoji: '👑' },
   ];
   const idx = ranks.findIndex(r => xp < r.minXP);
   if (idx === -1) return { rank: ranks[ranks.length - 1], pct: 100, nextXP: 0, toNext: 0 };
