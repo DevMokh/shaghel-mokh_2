@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d0d0d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="شغل مخك">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="شغل مخك">
+<meta name="msapplication-TileColor" content="#0d0d0d">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="https://i.postimg.cc/qqTBP312/1000061201.png">
+<title>شغل مخك - الإصدار الألترا 4.0</title>
+
+<!-- الخطوط -->
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Confetti -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js"></script>
+
+<!-- الأنماط المخصصة -->
+<link rel="stylesheet" href="styles.css">
+</head>
+<body id="main-body">
+
+<!-- شاشة التحميل -->
+<div id="loading-screen" style="position:fixed;inset:0;z-index:99999;background:#0d0d0d;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s;pointer-events:none;">
+  <div style="width:80px;height:80px;border-radius:30px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:flex;align-items:center;justify-content:center;font-size:40px;margin-bottom:20px;box-shadow:0 0 40px rgba(251,191,36,0.4);">🧠</div>
+  <div style="display:flex;gap:8px;margin-top:12px;">
+    <div class="loading-dot" style="animation-delay:0s"></div>
+    <div class="loading-dot" style="animation-delay:0.2s"></div>
+    <div class="loading-dot" style="animation-delay:0.4s"></div>
+  </div>
+  <div style="margin-top:20px;font-size:14px;font-weight:700;color:rgba(255,255,255,0.5);">جاري تحميل العقل...</div>
+</div>
+
+<!-- ══════════════════ التطبيق ══════════════════ -->
+<div style="max-width:500px;margin:0 auto;height:100vh;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);position:relative;box-shadow:0 0 80px rgba(0,0,0,0.6);">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <button class="topbar-icon" onclick="window.toggleSidebar()">
+      <i class="fas fa-bars"></i>
+    </button>
+    <div class="topbar-title">شغل <span>مخك</span></div>
+    <button class="topbar-icon" onclick="window.navTo('stats')">
+      <i class="fas fa-user-circle"></i>
+    </button>
+  </div>
+
+  <!-- SCREENS -->
+  <div style="flex:1;position:relative;overflow:hidden">
+
+    <!-- ══ الشاشة الرئيسية (HOME) ══ -->
+    <div id="screen-home" class="screen active" style="padding:0;">
+      <div class="home-scroll">
+        <!-- الهيدر المصغر (رصيد ومستوى) -->
+        <div class="home-header">
+          <div class="level-badge">
+            <span class="level-label">المستوى</span>
+            <span class="level-value" id="home-level">1</span>
+          </div>
+          <div class="coin-badge" id="home-coins">0</div>
+        </div>
+
+        <!-- بطاقة الملف الشخصي -->
+        <div class="profile-card">
+          <div class="profile-avatar-wrapper">
+            <img id="home-avatar" src="https://i.postimg.cc/qqTBP312/1000061201.png" alt="avatar">
+            <div id="home-avatar-frame" class="profile-frame"></div>
+          </div>
+          <h2 id="home-username">العبقري المجهول</h2>
+          <p id="home-rank" class="profile-rank">باحث عن المعرفة</p>
+        </div>
+
+        <!-- سلسلة الدخول (ستريك) -->
+        <div id="home-streak-badge" class="streak-card" style="display:none;">
+          <i class="fas fa-fire"></i>
+          <span id="home-streak-num">0</span>
+          <span id="home-streak-lbl">يوم متتالي</span>
+        </div>
+
+        <!-- بانر المنافسة -->
+        <div id="home-rival-banner" class="rival-card" style="display:none;">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div class="rival-content">
+            <span id="rival-name">صاحبك</span> فاق عليك!
+            <small id="rival-diff"></small>
+          </div>
+        </div>
+
+        <!-- تحدي اليوم -->
+        <div class="daily-card" onclick="window.navTo('daily')">
+          <div class="daily-info">
+            <div class="daily-label"><i class="fas fa-calendar-check"></i> تحدي اليوم</div>
+            <div id="daily-teaser-status">جاهز للعب</div>
+          </div>
+          <div class="daily-progress">
+            <div id="home-daily-prog" style="width:0%"></div>
+          </div>
+        </div>
+
+        <!-- شبكة التصنيفات (مصغرة) -->
+        <div class="categories-grid" id="home-categories-grid"></div>
+
+        <!-- زر بدء التحدي -->
+        <button class="cta-button" onclick="window.navTo('map')">
+          <i class="fas fa-play"></i> ابدأ التحدي
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ الخريطة (MAP) ══ -->
+    <div id="screen-map" class="screen">
+      <div class="map-header">
+        <h2>خريطة التقدم</h2>
+        <span id="map-progress-badge">0/12 مفتوح</span>
+      </div>
+      <div id="map-grid" class="map-grid"></div>
+    </div>
+
+    <!-- ══ الأقسام الفرعية (PATHS) ══ -->
+    <div id="screen-paths" class="screen">
+      <div id="paths-header"></div>
+      <div id="paths-list" class="paths-list"></div>
+    </div>
+
+    <!-- ══ الاختبار (QUIZ) ══ -->
+    <div id="screen-quiz" class="screen" style="padding:0">
+      <div class="quiz-container">
+        <!-- رأس الاختبار -->
+        <div class="quiz-header">
+          <button class="quiz-exit" onclick="window.confirmExit()"><i class="fas fa-times"></i></button>
+          <div class="quiz-counter">
+            <span id="q-counter">السؤال 1/10</span>
+            <span id="q-percent">0%</span>
+          </div>
+          <div class="quiz-timer">
+            <div id="timer-box">15</div>
+            <div id="quiz-streak-badge" class="streak-badge" style="display:none;">
+              <i class="fas fa-fire"></i> <span id="quiz-streak-num">0</span>
+            </div>
+          </div>
+        </div>
+        <!-- شريط التقدم -->
+        <div class="progress-bar">
+          <div id="q-progress" style="width:0%"></div>
+        </div>
+        <!-- بطاقة السؤال -->
+        <div class="question-card">
+          <div id="q-cat-badge" class="category-badge">فئة</div>
+          <h3 id="q-text">جاري تحضير الأسئلة...</h3>
+          <button id="btn-analyze" class="analyze-btn" onclick="window.askAIAnalysis()" style="display:none;">
+            <i class="fas fa-robot"></i> تحليل ذكي
+          </button>
+        </div>
+        <!-- الخيارات -->
+        <div id="options-box" class="options-grid"></div>
+        <!-- شرح الإجابة -->
+        <div id="analysis-container" class="analysis-box" style="display:none;">
+          <p id="analysis-text"></p>
+          <button id="btn-next" class="next-btn" onclick="window.nextQuestion()">السؤال التالي <i class="fas fa-arrow-left"></i></button>
+        </div>
+        <!-- المساعدات -->
+        <div class="helpers-row">
+          <button onclick="window.useHelper('skip')" id="btn-skip" class="helper-btn skip-btn">
+            <span id="h-skip">5</span> <i class="fas fa-forward"></i> تخطي
+          </button>
+          <button onclick="window.useHelper('hint')" id="btn-hint" class="helper-btn hint-btn">
+            <span id="h-hint">5</span> <i class="fas fa-lightbulb"></i> تلميح
+          </button>
+          <button onclick="window.useHelper('delete')" id="btn-del" class="helper-btn delete-btn">
+            <span id="h-del">5</span> <i class="fas fa-eraser"></i> حذف
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ النتيجة (RESULT) ══ -->
+    <div id="screen-result" class="screen">
+      <div class="result-container">
+        <div class="result-icon" id="result-emoji">🎉</div>
+        <h2 id="result-title">أحسنت!</h2>
+        <p id="result-subtitle"></p>
+        <div class="result-stats">
+          <div class="stat-item"><span>✅ صحيحة</span><span id="res-correct">0</span></div>
+          <div class="stat-item"><span>❌ خاطئة</span><span id="res-wrong">0</span></div>
+          <div class="stat-item"><span>💰 عملات</span><span id="res-coins">0</span></div>
+          <div class="stat-item"><span>⭐ XP</span><span id="res-xp">0</span></div>
+        </div>
+        <div class="result-actions">
+          <button class="primary-btn" onclick="window.navTo('map')"><i class="fas fa-play"></i> العب مجدداً</button>
+          <button class="secondary-btn" onclick="window.navTo('home')"><i class="fas fa-home"></i> الرئيسية</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ التحديات (WEEKLY / SEASON) ══ -->
+    <div id="screen-weekly" class="screen">
+      <div class="challenges-tabs">
+        <button class="tab-btn active" data-ctab="weekly" onclick="window.switchChallengeTab('weekly')">🏆 أسبوعي</button>
+        <button class="tab-btn" data-ctab="season" onclick="window.switchChallengeTab('season')">🌟 موسمي</button>
+        <button class="tab-btn" data-ctab="wtasks" onclick="window.switchChallengeTab('wtasks')">📋 مهام</button>
+      </div>
+      <div id="ch-tab-weekly" class="challenge-tab active">
+        <div id="weekly-header-card" class="weekly-header"></div>
+        <div id="weekly-leader-list" class="leader-list"></div>
+      </div>
+      <div id="ch-tab-season" class="challenge-tab">
+        <div id="season-card" class="season-card"></div>
+        <div id="season-ranks-bar" class="season-ranks"></div>
+        <div id="season-leader-list" class="leader-list"></div>
+      </div>
+      <div id="ch-tab-wtasks" class="challenge-tab">
+        <div id="weekly-tasks-list"></div>
+        <div id="streak-reward-grid" class="streak-grid"></div>
+        <div id="streak-next-reward"></div>
+      </div>
+    </div>
+
+    <!-- ══ تحدي اليوم (DAILY) ══ -->
+    <div id="screen-daily" class="screen">
+      <div id="daily-header-card" class="daily-header"></div>
+      <div id="daily-leader-list" class="leader-list"></div>
+    </div>
+
+    <!-- ══ غرف اللعب (ROOMS) ══ -->
+    <div id="screen-rooms" class="screen">
+      <div class="rooms-header">
+        <h2>غرف اللعب</h2>
+        <button class="primary-btn small" onclick="window.createRoom()"><i class="fas fa-plus"></i> إنشاء</button>
+      </div>
+      <div id="rooms-list" class="rooms-list"></div>
+    </div>
+
+    <!-- ══ بهو الغرفة (LOBBY) ══ -->
+    <div id="screen-lobby" class="screen" style="padding:0">
+      <div class="lobby-container">
+        <div class="lobby-header">
+          <button onclick="window.leaveRoom()"><i class="fas fa-arrow-right"></i> خروج</button>
+          <h3 id="lobby-room-name">الغرفة</h3>
+          <div id="lobby-room-code">كود: ---</div>
+        </div>
+        <div id="waiting-players" class="players-list"></div>
+        <div id="lobby-chat-messages" class="chat-messages"></div>
+        <div class="chat-input">
+          <input id="lobby-chat-input" placeholder="اكتب رسالتك...">
+          <button onclick="window.sendLobbyMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+        <div class="lobby-actions">
+          <button id="start-room-btn" onclick="window.startRoomGame()" style="display:none;">ابدأ اللعبة</button>
+          <button id="ready-toggle-btn" onclick="window.toggleReady()" style="display:none;">جاهز</button>
+          <div id="waiting-msg">في انتظار اللاعبين...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ لوحة المتصدرين (LEADERBOARD) ══ -->
+    <div id="screen-leaderboard" class="screen">
+      <div class="leaderboard-tabs">
+        <button class="tab-btn active" data-tab="global" onclick="window.switchLeaderboard('global')">🌍 عام</button>
+        <button class="tab-btn" data-tab="season" onclick="window.switchLeaderboard('season')">🏅 الموسم</button>
+        <button class="tab-btn" data-tab="daily" onclick="window.switchLeaderboard('daily')">📅 اليوم</button>
+      </div>
+      <div id="lb-season-badge"></div>
+      <div id="leader-list" class="leader-list"></div>
+    </div>
+
+    <!-- ══ المتجر (SHOP) ══ -->
+    <div id="screen-shop" class="screen">
+      <div class="shop-tabs">
+        <button data-stab="helpers" onclick="window.showShopTab('helpers')" class="tab-btn active">مساعدات</button>
+        <button data-stab="frames" onclick="window.showShopTab('frames')" class="tab-btn">إطارات</button>
+        <button data-stab="themes" onclick="window.showShopTab('themes')" class="tab-btn">ثيمات</button>
+      </div>
+      <div id="shop-content" class="shop-content"></div>
+    </div>
+
+    <!-- ══ الإحصائيات (STATS) ══ -->
+    <div id="screen-stats" class="screen">
+      <div class="stats-header">
+        <h2>إحصائياتي</h2>
+        <button onclick="window.showPlayerCard()"><i class="fas fa-id-card"></i> بطاقتي</button>
+      </div>
+      <div class="stats-tabs">
+        <button data-stab="overview" onclick="window.switchStatsTab('overview')" class="tab-btn active">نظرة عامة</button>
+        <button data-stab="charts" onclick="window.switchStatsTab('charts')" class="tab-btn">رسوم بيانية</button>
+        <button data-stab="achievements" onclick="window.switchStatsTab('achievements')" class="tab-btn">إنجازات</button>
+      </div>
+      <div id="stats-tab-overview" class="stats-tab-content active">
+        <div class="stats-grid" id="stats-overview-grid"></div>
+        <div class="stats-details">
+          <div><span>⚡ إجابات سريعة</span><span id="st-speed">0</span></div>
+          <div><span>🎯 بدون مساعدات</span><span id="st-nohint">0</span></div>
+          <div><span>⏱️ متوسط الوقت</span><span id="st-avgtime">0 ث</span></div>
+          <div><span>📅 سلسلة الدخول</span><span id="st-login-streak">0 يوم</span></div>
+        </div>
+        <div id="login-streak-dots" class="streak-dots"></div>
+      </div>
+      <div id="stats-tab-charts" class="stats-tab-content">
+        <div id="chart-categories"></div>
+        <div class="charts-summary">
+          <div>دقة الإجابات <span id="chart-accuracy">0%</span></div>
+          <div>متوسط النقاط <span id="chart-avg-score">0</span></div>
+        </div>
+      </div>
+      <div id="stats-tab-achievements" class="stats-tab-content">
+        <div id="achv-progress-text"></div>
+        <div id="achv-progress-bar" class="progress-bar"><div></div></div>
+        <div id="stats-achv-grid" class="achievements-grid"></div>
+      </div>
+    </div>
+
+  </div><!-- /screens -->
+
+  <!-- شريط التنقل السفلي -->
+  <div id="main-nav" class="bottom-nav">
+    <div onclick="window.navTo('home')" id="n-home" class="nav-item active"><i class="fas fa-home"></i><span>الرئيسية</span></div>
+    <div onclick="window.navTo('map')" id="n-map" class="nav-item"><i class="fas fa-compass"></i><span>الخريطة</span></div>
+    <div onclick="window.navTo('rooms')" id="n-rooms" class="nav-item"><i class="fas fa-users"></i><span>غرف</span></div>
+    <div onclick="window.navTo('leaderboard')" id="n-leaderboard" class="nav-item"><i class="fas fa-trophy"></i><span>المتصدرين</span></div>
+    <div onclick="window.navTo('weekly')" id="n-weekly" class="nav-item"><i class="fas fa-bolt"></i><span>تحديات</span></div>
+  </div>
+
+</div><!-- /app wrapper -->
+
+<!-- ══════════════════ الشريط الجانبي (SIDEBAR) ══════════════════ -->
+<div id="sb-overlay" class="sb-overlay" onclick="window.toggleSidebar()"></div>
+<div id="sidebar" class="sidebar-new">
+  <div class="sidebar-header">
+    <button onclick="window.toggleSidebar()"><i class="fas fa-times"></i></button>
+    <h2>الملف الشخصي</h2>
+    <div></div>
+  </div>
+  <div class="sidebar-profile">
+    <div class="sidebar-avatar">
+      <img id="side-avatar" src="https://i.postimg.cc/qqTBP312/1000061201.png">
+      <div id="side-avatar-frame"></div>
+    </div>
+    <h3 id="side-name">العبقري المجهول</h3>
+    <p id="side-id">ID: ----</p>
+  </div>
+  <div class="sidebar-stats">
+    <div class="stat"><i class="fas fa-coins"></i><span id="side-coins">0</span> عملات</div>
+    <div class="stat highlight"><i class="fas fa-star"></i><span id="side-lvl">1</span> المستوى</div>
+    <div class="stat"><i class="fas fa-check-circle"></i><span id="side-sections">0</span> قسم</div>
+  </div>
+  <div class="sidebar-menu">
+    <button onclick="window.showDailyTasksModal()"><i class="fas fa-tasks"></i> مهام اليوم <i class="fas fa-chevron-left"></i></button>
+    <button onclick="window.showAchievementsModal()"><i class="fas fa-trophy"></i> الإنجازات <i class="fas fa-chevron-left"></i></button>
+    <button onclick="window.showPlayerCard()"><i class="fas fa-id-card"></i> بطاقتي <i class="fas fa-chevron-left"></i></button>
+    <button class="highlight" onclick="window.toggleSidebar();window.navTo('daily')"><i class="fas fa-bolt"></i> تحدي اليوم <i class="fas fa-chevron-left"></i></button>
+    <button onclick="window.toggleSidebar();window.navTo('rooms')"><i class="fas fa-users"></i> غرف اللعب <i class="fas fa-chevron-left"></i></button>
+    <button onclick="window.toggleSidebar();window.navTo('weekly')"><i class="fas fa-calendar-alt"></i> التحدي الأسبوعي <i class="fas fa-chevron-left"></i></button>
+    <button onclick="window.toggleSidebar();window.showFriendsModal()"><i class="fas fa-user-friends"></i> الأصدقاء <i class="fas fa-chevron-left"></i></button>
+    <button onclick="window.toggleSettings()"><i class="fas fa-cog"></i> الإعدادات <i class="fas fa-chevron-left"></i></button>
+  </div>
+  <div id="settings-panel" class="sidebar-settings">
+    <!-- سيتم ملؤها ديناميكياً أو تظل ثابتة -->
+    <button onclick="window.changeUsername()">✏️ تغيير الاسم</button>
+    <div class="toggle-row"><span>🌙 الوضع الليلي</span><div class="toggle" id="theme-toggle" onclick="window.toggleTheme()"></div></div>
+    <div class="toggle-row"><span>🔊 الأصوات</span><div class="toggle" id="sound-toggle-sb" onclick="window.toggleSound()"></div></div>
+    <div>🎨 لون التطبيق</div>
+    <div id="theme-color-picker" class="color-picker"></div>
+    <input id="my-message-input" placeholder="رسالتك..." oninput="window.saveMessageDebounced()">
+    <button onclick="window.requestNotifPermission()">🔔 تفعيل الإشعارات</button>
+  </div>
+  <button class="reset-btn" onclick="window.resetGame()">🗑️ مسح البيانات</button>
+</div>
+
+<!-- توست -->
+<div id="toast-container"></div>
+
+<!-- حوارات التأكيد والإدخال (كما هي) -->
+<div id="cmod-confirm" class="cmod-overlay">...</div>
+<div id="cmod-input" class="cmod-overlay">...</div>
+<div id="cmod-exit" class="cmod-overlay">...</div>
+
+<!-- مودالات أخرى -->
+<div id="modal-friends" class="modal">...</div>
+<div id="modal-hint" class="modal">...</div>
+<div id="modal-tasks" class="modal">...</div>
+<div id="modal-achv" class="modal">...</div>
+<div id="modal-card" class="modal">...</div>
+<div id="modal-create-room" class="modal">...</div>
+<div id="modal-join-room" class="modal">...</div>
+
+<!-- PWA Banner & Service Worker Code (كما هو) -->
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
