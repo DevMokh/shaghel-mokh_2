@@ -13,7 +13,6 @@ import { getDefaultData, updateLoginStreak, saveData } from './data.js';
 import { updateUI } from './ui.js';
 import { showToast } from './helpers.js';
 
-// ─── تهيئة المصادقة وتسجيل الدخول كمجهول ────────────────────────────
 export async function initAuth() {
   try {
     await signInAnonymously(auth);
@@ -24,7 +23,6 @@ export async function initAuth() {
   }
 }
 
-// ─── الاستماع لحالة المستخدم وتحميل بياناته من Firestore ─────────────
 export function listenToUserData() {
   onAuthStateChanged(auth, (user) => {
     if (!user) {
@@ -40,7 +38,6 @@ export function listenToUserData() {
 
     const profileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'data');
 
-    // الاستماع للتغييرات في بيانات المستخدم
     onSnapshot(profileRef, (snap) => {
       const today = new Date().toDateString();
       let data;
@@ -49,7 +46,6 @@ export function listenToUserData() {
         data = snap.data();
         const defaults = getDefaultData();
 
-        // دمج البيانات المحفوظة مع القيم الافتراضية
         window.gameData = {
           ...defaults,
           ...data,
@@ -64,29 +60,23 @@ export function listenToUserData() {
           seasonData: { ...defaults.seasonData, ...(data.seasonData || {}) },
         };
 
-        // إعادة تعيين المهام اليومية إذا كان يوم جديد
         if (window.gameData.lastDailyUpdate !== today) {
-          window.gameData.dailyTasks.forEach((t) => {
-            t.current = 0;
-            t.claimed = false;
-          });
+          window.gameData.dailyTasks.forEach((t) => { t.current = 0; t.claimed = false; });
           window.gameData.lastDailyUpdate = today;
           window.gameData._catsToday = [];
         }
 
-        // مكافأة الدخول اليومي وسلسلة الدخول
         if (window.gameData.lastLoginDate !== today) {
           window.gameData.lastLoginDate = today;
           window.gameData.coins += 50;
           setTimeout(() => {
             showToast('🎁 مكافأة الدخول اليومي: +50 عملة!', 3500);
-            updateLoginStreak();   // تحديث السلسلة وإضافة المكافآت
-            saveData();            // حفظ فوري بعد المكافأة
-            updateUI();            // تحديث الواجهة
+            updateLoginStreak();
+            saveData();
+            updateUI();
           }, 2500);
         }
 
-        // تحديث الموسم الحالي إذا تغير
         const currentSeason = window.getCurrentSeason?.() || getCurrentSeasonFallback();
         if (window.gameData.currentSeason !== currentSeason) {
           window.gameData.currentSeason = currentSeason;
@@ -103,14 +93,17 @@ export function listenToUserData() {
           }
         }
 
-        // التأكد من أن جميع التصنيفات مفتوحة
         if (!window.gameData.unlockedCategories || window.gameData.unlockedCategories.length === 0) {
           window.gameData.unlockedCategories = defaults.unlockedCategories;
         }
 
         updateUI();
+
+        setTimeout(() => {
+          if (typeof window.updateHomeStreak === 'function') window.updateHomeStreak();
+          if (typeof window.checkAndOfferResume === 'function') window.checkAndOfferResume();
+        }, 1500);
       } else {
-        // مستخدم جديد: إنشاء ملف البيانات الافتراضية
         window.gameData = getDefaultData();
         window.gameData.lastLoginDate = today;
         window.gameData.lastDailyUpdate = today;
@@ -123,7 +116,6 @@ export function listenToUserData() {
       }
     }, (err) => {
       console.error('[Auth] Firestore snapshot error:', err);
-      // محاولة استعادة البيانات من النسخة الاحتياطية المحلية
       const backup = localStorage.getItem('shaghel_gamedata_backup');
       if (backup && !window.gameData) {
         try {
@@ -138,7 +130,6 @@ export function listenToUserData() {
   });
 }
 
-// دالة مساعدة للحصول على الموسم الحالي (تستخدم كاحتياط)
 function getCurrentSeasonFallback() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
