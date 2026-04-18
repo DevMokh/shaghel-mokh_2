@@ -1,4 +1,3 @@
-
 // js/firebase.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -21,7 +20,6 @@ import {
   deleteField,
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// إعدادات Firebase الخاصة بمشروعك
 const firebaseConfig = {
   apiKey: "AIzaSyBKQFpuzt92Uk_mJrSWuIYaVgqpc2g8stA",
   authDomain: "shaghel-mokh-ultra.firebaseapp.com",
@@ -32,20 +30,17 @@ const firebaseConfig = {
   measurementId: "G-EPJ1MGWBQW",
 };
 
-// تهيئة Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const APP_ID = "shaghel-mokh-ultra-full";
 
-// تعيين متغيرات عامة على window لتستخدمها دوال HTML القديمة
 window.db = db;
 window.auth = auth;
 window.appId = APP_ID;
 window.firebaseReady = false;
 window.currentUser = null;
 
-// دوال مساعدة لـ Firestore (لتسهيل الاستخدام في أي مكان)
 window.db_doc = (path) => doc(db, ...path.split("/"));
 window.db_col = (path) => collection(db, ...path.split("/"));
 window.db_set = async (path, data, merge = true) =>
@@ -66,14 +61,12 @@ window.dbWhere = where;
 window.dbServerTs = serverTimestamp;
 window.dbDeleteField = deleteField;
 
-// دالة للحصول على الموسم الحالي (تُستخدم في أماكن كثيرة)
 export function getCurrentSeason() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 window.getCurrentSeason = getCurrentSeason;
 
-// دالة للحصول على معرف الأسبوع (تُستخدم في التحديات الأسبوعية)
 export function getWeekId() {
   const d = new Date();
   const year = d.getFullYear();
@@ -83,5 +76,4 @@ export function getWeekId() {
 }
 window.getWeekId = getWeekId;
 
-// تصدير الكائنات الأساسية لاستخدامها في باقي الوحدات
 export { db, auth, APP_ID };
